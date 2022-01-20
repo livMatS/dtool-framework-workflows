@@ -30,9 +30,15 @@ jobs:
         sudo chown runner:docker /var/run/docker.sock
         # see https://github.com/nektos/act/issues/724#issuecomment-855390956
 
-        docker-compose -f docker-compose.yml -f docker-compose.default-envs.yml -f docker-compose.default-ports.yml -f docker-compose.testing.yml pull 
+        echo "merged docker-compose config"
+        docker-compose ${DOCKER_COMPOSE_OPTS} config
+
+        echo "pull images"
+        docker-compose ${DOCKER_COMPOSE_OPTS} pull 
+
         echo "docker image ls"
         docker image ls
+
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh

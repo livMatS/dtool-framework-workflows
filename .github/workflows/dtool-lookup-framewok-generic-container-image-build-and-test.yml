@@ -179,21 +179,29 @@ jobs:
         # use commit-specific github sha tag to identify image built above correctly
         cd dtool-lookup-server-container-composition
         echo '{"version":"2","services":{"${{ inputs.service }}":{"image":"${{ inputs.image }}:sha-${{ github.sha }}"}}}' | yq e . -o yaml -P - >  docker-compose.current_build.versions.yml
+
+        echo "generated docker-compose.current_build.versions.yml"
+        cat docker-compose.current_build.versions.yml
+
+        echo "docker-compose config"
         docker-compose ${DOCKER_COMPOSE_OPTS} config
 
-    - name: Prepare composition
+    - name: Pull images
+      continue-on-error: true
       run: |
         cd dtool-lookup-server-container-composition
         docker-compose ${DOCKER_COMPOSE_OPTS} pull 
         echo "docker image ls"
         docker image ls
+
+    - name: Generate keys
+      run: |
+        cd dtool-lookup-server-container-composition
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh
 
     - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
-      env:
-        DTOOL_LOOKUP_CLIENT_CONTAINER_IMAGE_VERSION: sha-${{ github.sha }}
       run: |        
         cd dtool-lookup-server-container-composition
         docker-compose ${DOCKER_COMPOSE_OPTS} up -d 

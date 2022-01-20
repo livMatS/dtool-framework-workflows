@@ -6,7 +6,7 @@
 # - https://www.freecodecamp.org/news/where-are-docker-images-stored-docker-container-paths-explained/
 # - https://testdriven.io/blog/faster-ci-builds-with-docker-cache/
 # - https://about.gitlab.com/blog/2020/10/30/mitigating-the-impact-of-docker-hub-pull-requests-limits/
-name: generic-container-build-and-test
+name: generic-container-image-build-and-test
 
 on:
   workflow_call:

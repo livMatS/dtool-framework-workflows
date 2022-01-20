@@ -187,10 +187,10 @@ jobs:
         docker-compose ${DOCKER_COMPOSE_OPTS} config
 
     - name: Pull images
-      continue-on-error: true
       run: |
         cd dtool-lookup-server-container-composition
-        docker-compose ${DOCKER_COMPOSE_OPTS} pull 
+        # don't fail if some image is not publically available
+        docker-compose ${DOCKER_COMPOSE_OPTS} pull || true
         echo "docker image ls"
         docker image ls
 

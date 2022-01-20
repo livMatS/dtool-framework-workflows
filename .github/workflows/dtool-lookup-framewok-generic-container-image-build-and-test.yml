@@ -32,23 +32,22 @@ on:
         required: false
         type: string
       
+env:
+  DOCKER_COMPOSE_OPTS: >-
+    -p dtool-lookup-server-default-ports
+    -f docker-compose.yml
+    -f docker-compose.versions.yml
+    -f docker-compose.default-envs.yml
+    -f docker-compose.default-ports.yml
+    -f docker-compose.testing.yml
+    -f docker-compose.testing.versions.yml
+    -f docker-compose.current_build.versions.yml
 
 jobs:
 
   build:
 
     runs-on: ubuntu-20.04
-
-    env:
-      DOCKER_COMPOSE_OPTS: >-
-        -p dtool-lookup-server-default-ports
-        -f docker-compose.yml 
-        -f docker-compose.versions.yml
-        -f docker-compose.default-envs.yml 
-        -f docker-compose.default-ports.yml 
-        -f docker-compose.testing.yml
-        -f docker-compose.testing.versions.yml
-        -f docker-compose.current_build.versions.yml
       
     steps:
 

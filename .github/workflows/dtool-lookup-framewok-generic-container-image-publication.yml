@@ -17,7 +17,7 @@ on:
         description: 'Context for building docker image'
         default: '.'
         required: false
-          type: string
+        type: string
     secrets:
       DOCKERHUB_USERNAME:
         require: true

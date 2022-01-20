@@ -1,0 +1,12 @@
+# sample for calling reusable workflow
+name: dummy-container-build-and-test
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    uses: jotelha/dtool-framework-workflows/.github/workflows/dtool-lookup-framewok-generic-container-image-build-and-test.yml@22_reusable_container_build_workflow
+    with:
+      image: dummy-container-image
+      service: dummy_container_image
+      docker_file: ./testing/dummy_container_image/Dockerfile

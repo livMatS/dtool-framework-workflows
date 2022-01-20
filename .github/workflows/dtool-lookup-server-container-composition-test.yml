@@ -1,0 +1,91 @@
+name: dtool-lookup-server-container-composition-test
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    env:
+      DOCKER_COMPOSE_OPTS: >-
+        -p dtool-lookup-server-default-ports
+        -f docker-compose.yml 
+        -f docker-compose.versions.yml
+        -f docker-compose.default-envs.yml 
+        -f docker-compose.default-ports.yml 
+        -f docker-compose.testing.yml
+        -f docker-compose.testing.versions.yml
+      
+    steps:
+    - name: Git checkout this
+      uses: actions/checkout@v2
+
+    - name: Pull container images and prepare composition
+      run: |
+        # the following line allows testing locally with act (https://github.com/nektos/act),
+        # i.e. by running
+        #   act -W .github/workflows/test.yml --bind
+        # from within this repository's root directory (see README for more information).
+        sudo chown runner:docker /var/run/docker.sock
+        # see https://github.com/nektos/act/issues/724#issuecomment-855390956
+
+        docker-compose -f docker-compose.yml -f docker-compose.default-envs.yml -f docker-compose.default-ports.yml -f docker-compose.testing.yml pull 
+        echo "docker image ls"
+        docker image ls
+        echo "generate jwt key"
+        cd keys
+        bash generate_jwt_key.sh
+
+    - name: Provide dtool lookup server and run tests
+      run: |        
+        docker-compose ${DOCKER_COMPOSE_OPTS} up -d 
+
+        sleep 10 # TODO: wait for all services to be ready and healthy
+       
+        echo "docker container ls --all"
+        docker container ls --all
+
+        echo "docker volume ls"
+        docker volume ls
+        
+        echo "docker images"
+        docker-compose ${DOCKER_COMPOSE_OPTS} images
+
+        echo "dtool lookup server log"
+        docker-compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_server
+        
+        echo "dtool lookup client log"
+        docker-compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
+
+        # create dtool directory on samba share
+        echo "smbclient -U guest -c "mkdir dtool" -N -W WORKGROUP //sambaserver/sambashare"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run --entrypoint smbclient dtool_lookup_client -U guest -c "mkdir dtool" -N -W WORKGROUP //sambaserver/sambashare
+
+        # place test datasets on storage infrastructure
+        echo "dtool cp tests/dtool/simple_test_dataset smb://test-share"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run -v $(pwd)/tests:/tests dtool_lookup_client cp /tests/dtool/simple_test_dataset smb://test-share
+
+        echo "dtool cp tests/dtool/simple_test_dataset s3://test-bucket"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run -v $(pwd)/tests:/tests dtool_lookup_client cp /tests/dtool/simple_test_dataset s3://test-bucket
+
+        echo "dtool ls smb://test-share"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client ls smb://test-share
+
+        echo "dtool ls s3://test-bucket"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client ls s3://test-bucket
+        
+        echo "explicitly re-evoke dataset indexing"
+        docker-compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
+
+        echo "dtool query '{}'"
+        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
+
+        # cd ..
+        # sleep 10
+        # # run tests, i.e.
+        # #  pytest --deselect=dtool-lookup-server-container-composition
+        # cd dtool-lookup-server-container-composition
+
+        echo "docker-compose down --volumes"
+        docker-compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30

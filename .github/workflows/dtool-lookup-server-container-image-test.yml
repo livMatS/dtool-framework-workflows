@@ -5,7 +5,8 @@ on: [push, pull_request]
 
 jobs:
   build-and-test:
-    uses: jotelha/dtool-framework-workflows/.github/workflows/dtool-lookup-framewok-generic-container-image-test.yml@c14871bc627e8d6f80327a08433089d74f858821
+    uses: jotelha/dtool-framework-workflows/.github/workflows/dtool-lookup-framewok-generic-container-image-test.yml@22_reusable_container_build_workflow
     with:
       image: jotelha/dtool-lookup-server
       service: dtool_lookup_server
+      docker_file: ./compose/production/dtool_lookup_server/Dockerfile

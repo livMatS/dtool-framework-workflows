@@ -23,7 +23,8 @@ on:
         type: string
       docker_file:
         description: 'Path to dockerfile within repository of calling workflow'
-        required: true
+        default: './compose/production/dtool_lookup_server/Dockerfile'
+        required: false
         type: string
       docker_context:
         description: 'Context for building docker image'

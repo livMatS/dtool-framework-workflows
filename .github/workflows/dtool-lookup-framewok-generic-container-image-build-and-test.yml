@@ -178,7 +178,7 @@ jobs:
       run: |
         # override composition defaults to use local image
         # use commit-specific github sha tag to identify image built above correctly
-        echo '{"version":"2","services":{"${{ inputs.service }}":{"image":"${{ inputs.image }}:sha-${{ github.sha }}"}}}' | yq --yaml-output >  docker-compose.current_build.versions.yml
+        echo '{"version":"2","services":{"${{ inputs.service }}":{"image":"${{ inputs.image }}:sha-${{ github.sha }}"}}}' | yq -o yaml >  docker-compose.current_build.versions.yml
         docker-compose ${DOCKER_COMPOSE_OPTS} config
 
     - name: Prepare composition

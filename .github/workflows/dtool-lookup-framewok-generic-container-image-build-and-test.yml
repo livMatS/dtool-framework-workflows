@@ -51,7 +51,7 @@ jobs:
       
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -167,7 +167,7 @@ jobs:
         docker image ls -a
 
     - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: jotelha/dtool-lookup-server-container-composition
         ref: ${{ matrix.dtool-lookup-server-container-composition-version }}

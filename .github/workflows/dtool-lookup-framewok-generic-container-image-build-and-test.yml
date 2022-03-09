@@ -115,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dtool-lookup-server-container-composition-version: [0.6.1]
+        dtool-lookup-server-container-composition-version: [0.6.2]
 
     steps:
     

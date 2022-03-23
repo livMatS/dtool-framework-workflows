@@ -169,7 +169,7 @@ jobs:
     - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
       uses: actions/checkout@v2
       with:
-        repository: jotelha/dtool-lookup-server-container-composition
+        repository: livMatS/dtool-lookup-server-container-composition
         ref: ${{ matrix.dtool-lookup-server-container-composition-version }}
         path: dtool-lookup-server-container-composition
 

@@ -1,4 +1,4 @@
-name: dtool-lookup-server-container-composition-test
+name: dtool-lookup-api-test
 
 on:
   workflow_call:
@@ -9,8 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8']
-        dtool-lookup-api-version: ['0.5.0']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        dtool-lookup-server-container-composition-version: ['0.6.4', '0.7.0']
 
     env:
       DOCKER_COMPOSE_OPTS: >-
@@ -26,12 +26,12 @@ jobs:
     - name: Git checkout this
       uses: actions/checkout@v3
 
-    - name: Git checkout dtool-lookup-api ${{ matrix.dtool-lookup-api-version }}
+    - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
       uses: actions/checkout@v3
       with:
-        repository: livMatS/dtool-lookup-api
-        ref: ${{ matrix.dtool-lookup-api-version }}
-        path: dtool-lookup-api
+        repository: livMatS/dtool-lookup-server-container-composition
+        ref: ${{ matrix.dtool-lookup-server-container-composition-version }}
+        path: dtool-lookup-server-container-composition
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
@@ -39,6 +39,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Pull container images and prepare composition
+      working-directory: ./dtool-lookup-server-container-composition
       run: |
         # the following line allows testing locally with act (https://github.com/nektos/act),
         # i.e. by running
@@ -55,13 +56,13 @@ jobs:
 
         echo "docker image ls"
         docker image ls
-
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh
 
-    - name: Provide dtool lookup server
-      run: |        
+    - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and test with pytest
+      working-directory: dtool-lookup-server-container-composition
+      run: |
         docker-compose ${DOCKER_COMPOSE_OPTS} up -d 
 
         sleep 10 # TODO: wait for all services to be ready and healthy
@@ -108,21 +109,27 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel setuptools-scm[toml] importlib-metadata
-        pip install pytest pytest-cov pytest-ordering
+        pip install flake8 pytest pytest-cov pytest-ordering
 
-    - name: Install dtool-lookup-api
-      working-directory: dtool-lookup-api
+    - name: Install this package
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install ".[testing]"
         echo "pip list"
         pip list
 
-    - name: Run dtool-lookup-api tests
-      working-directory: dtool-lookup-api
-      run: pytest
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Pytest
+      run: pytest --deselect=dtool-lookup-server-container-composition
 
     - name: Shut down container composition
+      working-directory: dtool-lookup-server-container-composition
       run: |
         echo "docker-compose down --volumes"
         docker-compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30

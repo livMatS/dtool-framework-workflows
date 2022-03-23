@@ -1,0 +1,11 @@
+name: dtool-lookup-framework-test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    uses: livMatS/dtool-framework-workflows/.github/workflows/dtool-lookup-api-vs-dtool-lookup-server-container-composition-cross-test.yml@master

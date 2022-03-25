@@ -15,13 +15,16 @@ jobs:
     env:
       DOCKER_COMPOSE_OPTS: >-
         -p dtool-lookup-server-default-ports
-        -f docker-compose.yml 
+        -f docker-compose.yml
         -f docker-compose.versions.yml
-        -f docker-compose.default-envs.yml 
-        -f docker-compose.default-ports.yml 
+        -f docker-compose.self-signed-certificates.yml
+        -f docker-compose.default-envs.yml
+        -f docker-compose.default-ports.yml
         -f docker-compose.testing.yml
         -f docker-compose.testing.versions.yml
-      
+        -f docker-compose.testing.self-signed-certificates.yml
+        -f docker-compose.testing.default-ports.yml
+
     steps:
     - name: Git checkout this
       uses: actions/checkout@v3
@@ -61,7 +64,7 @@ jobs:
         bash generate_jwt_key.sh
 
     - name: Provide dtool lookup server
-      run: |        
+      run: |
         docker-compose ${DOCKER_COMPOSE_OPTS} up -d 
 
         sleep 10 # TODO: wait for all services to be ready and healthy

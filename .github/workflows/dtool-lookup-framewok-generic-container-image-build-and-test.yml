@@ -37,11 +37,13 @@ env:
     -p dtool-lookup-server-default-ports
     -f docker-compose.yml
     -f docker-compose.versions.yml
+    -f docker-compose.self-signed-certificates.yml
     -f docker-compose.default-envs.yml
     -f docker-compose.default-ports.yml
     -f docker-compose.testing.yml
     -f docker-compose.testing.versions.yml
-    -f docker-compose.current_build.versions.yml
+    -f docker-compose.testing.self-signed-certificates.yml
+    -f docker-compose.testing.default-ports.yml
 
 jobs:
 

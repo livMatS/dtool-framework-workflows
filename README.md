@@ -15,7 +15,7 @@ This repository provides reusable CI workflows for components of the dtool ecosy
 
 This repository is the top layer in our dtool ecosystem CI. From top to bottom, those layers are
 
-* [`dtool-framework-workflows`](https://github.com/livMatS/dtool-framework-workflows) (this repositry), in paricular `.github/workflows/dtool-lookup-framewok-generic-container-image-build-and-test.yml`
+* [`dtool-framework-workflows`](https://github.com/livMatS/dtool-framework-workflows) (this repositry), in paricular `.github/workflows/dtool-lookup-framework-generic-container-image-build-and-test.yml`
   * [`dtool-lookup-server-container-composition`](https://github.com/livMatS/dtool-lookup-server-container-composition)
     * actual containers (see *Introduction* above)
       * dtool Python packages at https://github.com/jic-dtool and https://github.com/livMatS.

@@ -53,8 +53,8 @@ jobs:
         echo "merged docker-compose config"
         docker compose ${DOCKER_COMPOSE_OPTS} config
 
-        echo "pull images"
-        docker compose ${DOCKER_COMPOSE_OPTS} pull 
+        echo "docker compose build"
+        docker compose ${DOCKER_COMPOSE_OPTS} build
 
         echo "docker image ls"
         docker image ls

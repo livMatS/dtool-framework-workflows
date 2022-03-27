@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.10']
-        dtool-lookup-server-container-composition-version: ['0.7.0']
+        dtool-lookup-server-container-composition-version: ['master']
         dtool-lookup-api-version: ['master']
       
     env:
@@ -59,11 +59,12 @@ jobs:
         echo "merged docker-compose config"
         docker compose ${DOCKER_COMPOSE_OPTS} config
 
-        echo "pull images"
-        docker compose ${DOCKER_COMPOSE_OPTS} pull 
+        echo "docker compose build"
+        docker compose ${DOCKER_COMPOSE_OPTS} build
 
         echo "docker image ls"
         docker image ls
+
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh

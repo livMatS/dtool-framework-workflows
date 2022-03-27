@@ -44,6 +44,7 @@ env:
     -f docker-compose.testing.versions.yml
     -f docker-compose.testing.self-signed-certificates.yml
     -f docker-compose.testing.default-ports.yml
+    -f docker-compose.current_build.versions.yml
 
 jobs:
 
@@ -186,30 +187,24 @@ jobs:
         cat docker-compose.current_build.versions.yml
 
         echo "docker-compose config"
-        docker-compose ${DOCKER_COMPOSE_OPTS} config
+        docker compose ${DOCKER_COMPOSE_OPTS} config
 
-    - name: Pull images
+    - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
       run: |
         cd dtool-lookup-server-container-composition
         # don't fail if some image is not publically available
-        docker-compose ${DOCKER_COMPOSE_OPTS} pull || true
+        docker compose ${DOCKER_COMPOSE_OPTS} pull || true
         echo "docker image ls"
         docker image ls
 
-    - name: Generate keys
-      run: |
-        cd dtool-lookup-server-container-composition
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh
+        cd ..
 
-    - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
-      run: |        
-        cd dtool-lookup-server-container-composition
-        docker-compose ${DOCKER_COMPOSE_OPTS} up -d 
+        echo "dockr compose up -d"
+        docker compose ${DOCKER_COMPOSE_OPTS} up -d 
 
-        sleep 10 # TODO: wait for all services to be ready and healthy
-       
         echo "docker container ls --all"
         docker container ls --all
 
@@ -217,36 +212,19 @@ jobs:
         docker volume ls
         
         echo "docker images"
-        docker-compose ${DOCKER_COMPOSE_OPTS} images
+        docker compose ${DOCKER_COMPOSE_OPTS} images
 
         echo "dtool lookup server log"
-        docker-compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_server
+        docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_server
         
         echo "dtool lookup client log"
-        docker-compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
+        docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
 
-        # create dtool directory on samba share
-        echo "smbclient -U guest -c "mkdir dtool" -N -W WORKGROUP //sambaserver/sambashare"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run --entrypoint smbclient dtool_lookup_client -U guest -c "mkdir dtool" -N -W WORKGROUP //sambaserver/sambashare
-
-        # place test datasets on storage infrastructure
-        echo "dtool cp tests/dtool/simple_test_dataset smb://test-share"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run -v $(pwd)/tests:/tests dtool_lookup_client cp /tests/dtool/simple_test_dataset smb://test-share
-
-        echo "dtool cp tests/dtool/simple_test_dataset s3://test-bucket"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run -v $(pwd)/tests:/tests dtool_lookup_client cp /tests/dtool/simple_test_dataset s3://test-bucket
-
-        echo "dtool ls smb://test-share"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client ls smb://test-share
-
-        echo "dtool ls s3://test-bucket"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client ls s3://test-bucket
-        
         echo "explicitly re-evoke dataset indexing"
-        docker-compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
+        docker compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
 
         echo "dtool query '{}'"
-        docker-compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
+        docker compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
 
         # cd ..
         # sleep 10
@@ -254,5 +232,5 @@ jobs:
         # #  pytest --deselect=dtool-lookup-server-container-composition
         # cd dtool-lookup-server-container-composition
 
-        echo "docker-compose down --volumes"
-        docker-compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30
+        echo "docker compose down --volumes"
+        docker compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30

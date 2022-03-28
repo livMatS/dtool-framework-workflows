@@ -12,19 +12,6 @@ jobs:
         python-version: ['3.8']
         dtool-lookup-api-version: ['0.5.0']
 
-    env:
-      DOCKER_COMPOSE_OPTS: >-
-        -p dtool-lookup-server-default-ports
-        -f docker-compose.yml
-        -f docker-compose.versions.yml
-        -f docker-compose.self-signed-certificates.yml
-        -f docker-compose.default-envs.yml
-        -f docker-compose.default-ports.yml
-        -f docker-compose.testing.yml
-        -f docker-compose.testing.versions.yml
-        -f docker-compose.testing.self-signed-certificates.yml
-        -f docker-compose.testing.default-ports.yml
-
     steps:
     - name: Git checkout this
       uses: actions/checkout@v3
@@ -49,6 +36,11 @@ jobs:
         # from within this repository's root directory (see README for more information).
         sudo chown runner:docker /var/run/docker.sock
         # see https://github.com/nektos/act/issues/724#issuecomment-855390956
+
+        source env.testing.rc
+
+        echo "printenv"
+        printenv
 
         echo "merged docker-compose config"
         docker compose ${DOCKER_COMPOSE_OPTS} config
@@ -82,6 +74,15 @@ jobs:
         echo "dtool lookup client log"
         docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
 
+        echo "s3server log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server
+
+        echo "s3server-init log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server_init
+
+        echo "testing-env-init"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs testing_env_init
+
         echo "explicitly re-evoke dataset indexing"
         docker compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
 
@@ -105,8 +106,3 @@ jobs:
     - name: Run dtool-lookup-api tests
       working-directory: dtool-lookup-api
       run: pytest
-
-    - name: Shut down container composition
-      run: |
-        echo "docker compose down --volumes"
-        docker compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30

@@ -31,20 +31,6 @@ on:
         default: '.'
         required: false
         type: string
-      
-env:
-  DOCKER_COMPOSE_OPTS: >-
-    -p dtool-lookup-server-default-ports
-    -f docker-compose.yml
-    -f docker-compose.versions.yml
-    -f docker-compose.self-signed-certificates.yml
-    -f docker-compose.default-envs.yml
-    -f docker-compose.default-ports.yml
-    -f docker-compose.testing.yml
-    -f docker-compose.testing.versions.yml
-    -f docker-compose.testing.self-signed-certificates.yml
-    -f docker-compose.testing.default-ports.yml
-    -f docker-compose.current_build.versions.yml
 
 jobs:
 
@@ -110,7 +96,6 @@ jobs:
         name: image
         path: /tmp/image.tar
 
-
   test:
 
     needs: build
@@ -118,7 +103,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dtool-lookup-server-container-composition-version: [0.6.3]
+        python-version: ['3.8']
+        dtool-lookup-server-container-composition-version: ['master']
+        dtool-lookup-api-version: ['master']
 
     steps:
     
@@ -170,30 +157,43 @@ jobs:
         docker image ls -a
 
     - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: livMatS/dtool-lookup-server-container-composition
         ref: ${{ matrix.dtool-lookup-server-container-composition-version }}
         path: dtool-lookup-server-container-composition
 
-    - name: Modify pinned version for ${{ inputs.image }}
+    - name: Git checkout dtool-lookup-api ${{ matrix.dtool-lookup-api-version }}
+      uses: actions/checkout@v3
+      with:
+        repository: livMatS/dtool-lookup-api
+        ref: ${{ matrix.dtool-lookup-api-version }}
+        path: dtool-lookup-api
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Modify pinned version for ${{ inputs.image }}, provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
+      working-directory: dtool-lookup-server-container-composition
       run: |
         # override composition defaults to use local image
         # use commit-specific github sha tag to identify image built above correctly
-        cd dtool-lookup-server-container-composition
         echo '{"version":"2","services":{"${{ inputs.service }}":{"image":"${{ inputs.image }}:sha-${{ github.sha }}"}}}' | yq e . -o yaml -P - >  docker-compose.current_build.versions.yml
 
         echo "generated docker-compose.current_build.versions.yml"
         cat docker-compose.current_build.versions.yml
 
+        source env.testing.rc
+        DOCKER_COMPOSE_OPTS="${DOCKER_COMPOSE_OPTS} -f docker-compose.current_build.versions.yml"
+
         echo "docker-compose config"
         docker compose ${DOCKER_COMPOSE_OPTS} config
 
-    - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
-      run: |
-        cd dtool-lookup-server-container-composition
         # don't fail if some image is not publically available
         docker compose ${DOCKER_COMPOSE_OPTS} pull || true
+
         echo "docker image ls"
         docker image ls
 
@@ -202,7 +202,7 @@ jobs:
         bash generate_jwt_key.sh
         cd ..
 
-        echo "dockr compose up -d"
+        echo "docker compose up -d"
         docker compose ${DOCKER_COMPOSE_OPTS} up -d 
 
         echo "docker container ls --all"
@@ -220,17 +220,36 @@ jobs:
         echo "dtool lookup client log"
         docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
 
+        echo "s3server log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server
+
+        echo "s3server-init log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server_init
+
+        echo "testing-env-init"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs testing_env_init
+
         echo "explicitly re-evoke dataset indexing"
         docker compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
 
         echo "dtool query '{}'"
         docker compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
 
-        # cd ..
-        # sleep 10
-        # # run tests, i.e.
-        # #  pytest --deselect=dtool-lookup-server-container-composition
-        # cd dtool-lookup-server-container-composition
+    - name: Install basic testing requirements
+      working-directory: dtool-lookup-api
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade setuptools wheel setuptools-scm[toml] importlib-metadata
+        pip install pytest pytest-cov pytest-ordering
 
-        echo "docker compose down --volumes"
-        docker compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30
+    - name: Install dtool-lookup-api
+      working-directory: dtool-lookup-api
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install ".[testing]"
+        echo "pip list"
+        pip list
+
+    - name: Run dtool-lookup-api tests
+      working-directory: dtool-lookup-api
+      run: pytest

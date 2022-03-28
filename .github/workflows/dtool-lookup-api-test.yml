@@ -12,19 +12,6 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10']
         dtool-lookup-server-container-composition-version: ['0.6.4', '0.7.0']
 
-    env:
-      DOCKER_COMPOSE_OPTS: >-
-        -p dtool-lookup-server-default-ports
-        -f docker-compose.yml
-        -f docker-compose.versions.yml
-        -f docker-compose.self-signed-certificates.yml
-        -f docker-compose.default-envs.yml
-        -f docker-compose.default-ports.yml
-        -f docker-compose.testing.yml
-        -f docker-compose.testing.versions.yml
-        -f docker-compose.testing.self-signed-certificates.yml
-        -f docker-compose.testing.default-ports.yml
-      
     steps:
     - name: Git checkout this
       uses: actions/checkout@v3
@@ -51,6 +38,11 @@ jobs:
         sudo chown runner:docker /var/run/docker.sock
         # see https://github.com/nektos/act/issues/724#issuecomment-855390956
 
+        source env.testing.rc
+
+        echo "printenv"
+        printenv
+
         echo "merged docker-compose config"
         docker compose ${DOCKER_COMPOSE_OPTS} config
 
@@ -59,6 +51,7 @@ jobs:
 
         echo "docker image ls"
         docker image ls
+
         echo "generate jwt key"
         cd keys
         bash generate_jwt_key.sh
@@ -82,12 +75,21 @@ jobs:
         echo "dtool lookup client log"
         docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
 
+        echo "s3server log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server
+
+        echo "s3server-init log"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server_init
+
+        echo "testing-env-init"
+        docker compose  ${DOCKER_COMPOSE_OPTS} logs testing_env_init
+
         echo "explicitly re-evoke dataset indexing"
         docker compose ${DOCKER_COMPOSE_OPTS} exec -T dtool_lookup_server /refresh_index
 
         echo "dtool query '{}'"
         docker compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
-      
+
     - name: Install basic testing requirements
       run: |
         python -m pip install --upgrade pip
@@ -110,9 +112,3 @@ jobs:
 
     - name: Pytest
       run: pytest --deselect=dtool-lookup-server-container-composition
-
-    - name: Shut down container composition
-      working-directory: dtool-lookup-server-container-composition
-      run: |
-        echo "docker compose down --volumes"
-        docker compose ${DOCKER_COMPOSE_OPTS} down --volumes --timeout 30

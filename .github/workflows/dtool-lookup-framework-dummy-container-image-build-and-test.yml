@@ -5,7 +5,7 @@ on: [push, pull_request]
 
 jobs:
   build-and-test:
-    uses: livMatS/dtool-framework-workflows/.github/workflows/dtool-lookup-framework-generic-container-image-build-and-test.yml@master
+    uses: livMatS/dtool-framework-workflows/.github/workflows/dtool-lookup-framework-generic-container-image-build-and-test.yml@main
     with:
       image: dummy-container-image
       service: dummy_container_image

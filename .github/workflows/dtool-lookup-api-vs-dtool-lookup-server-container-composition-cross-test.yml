@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.10']
-        dserver-container-composition-version: ['master']
-        dtool-lookup-api-version: ['master']
+        dserver-container-composition-version: ['main']
+        dtool-lookup-api-version: ['main']
 
     steps:
     - name: Git checkout dserver-container-composition ${{ matrix.dserver-container-composition-version }}

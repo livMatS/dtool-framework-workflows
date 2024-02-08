@@ -15,14 +15,14 @@ jobs:
 
     steps:
     - name: Git checkout dserver-container-composition ${{ matrix.dserver-container-composition-version }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: livMatS/dserver-container-composition
         ref: ${{ matrix.dserver-container-composition-version }}
         path: dserver-container-composition
 
     - name: Git checkout dtool-lookup-api ${{ matrix.dtool-lookup-api-version }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: livMatS/dtool-lookup-api
         ref: ${{ matrix.dtool-lookup-api-version }}

@@ -37,12 +37,14 @@ jobs:
 
     - name: Docker meta
       id: docker_meta
-      uses: crazy-max/ghaction-docker-meta@v5.5.1
+      uses: docker/metadata-action@v5.5.1
       with:
         images: ${{ inputs.image }}
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
+          type=ref,event=branch
+          type=sha
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2

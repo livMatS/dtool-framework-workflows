@@ -10,7 +10,7 @@ on:
         type: string
       docker_file:
         description: 'Path to dockerfile within repository of calling workflow'
-        default: './compose/production/dtool_lookup_server/Dockerfile'
+        default: './compose/production/dserver/Dockerfile'
         required: false
         type: string
       docker_context:

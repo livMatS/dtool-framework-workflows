@@ -8,4 +8,4 @@ on:
 
 jobs:
   test:
-    uses: livMatS/dtool-framework-workflows/.github/workflows/dtool-lookup-api-vs-dtool-lookup-server-container-composition-cross-test.yml@master
+    uses: livMatS/dtool-framework-workflows/.github/workflows/dtool-lookup-api-vs-dserver-container-composition-cross-test.yml@master

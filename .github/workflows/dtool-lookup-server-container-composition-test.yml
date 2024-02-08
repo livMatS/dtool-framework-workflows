@@ -1,4 +1,4 @@
-name: dtool-lookup-server-container-composition-test
+name: dserver-container-composition-test
 
 on:
   workflow_call:

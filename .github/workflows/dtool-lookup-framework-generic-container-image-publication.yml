@@ -5,7 +5,7 @@ on:
     inputs:
       image:
         description: 'Full name of container image to build, without tag'
-        default: 'jotelha/dtool-lookup-server'
+        default: 'jotelha/dserver'
         required: false
         type: string
       docker_file:

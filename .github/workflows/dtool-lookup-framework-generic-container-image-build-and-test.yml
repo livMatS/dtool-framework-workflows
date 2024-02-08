@@ -13,7 +13,7 @@ on:
     inputs:
       image:
         description: 'Full name of container image to build, without tag'
-        default: 'jotelha/dtool-lookup-server'
+        default: 'jotelha/dserver'
         required: false
         type: string
       service:
@@ -104,7 +104,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.8']
-        dtool-lookup-server-container-composition-version: ['master']
+        dserver-container-composition-version: ['master']
         dtool-lookup-api-version: ['master']
 
     steps:
@@ -113,7 +113,7 @@ jobs:
     # * https://github.com/docker/compose/issues/8494
     # * https://github.com/docker/compose/issues/8590 
     # otherwise, the line
-    #    docker-compose -p dtool-lookup-server-container-composition up -d 
+    #    docker-compose -p dserver-container-composition up -d
     # below will fail with
     #   [2394] Failed to execute script docker-compose
     #   Traceback (most recent call last):
@@ -156,12 +156,12 @@ jobs:
         docker load --input /tmp/image.tar
         docker image ls -a
 
-    - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
+    - name: Git checkout dserver-container-composition ${{ matrix.dserver-container-composition-version }}
       uses: actions/checkout@v3
       with:
-        repository: livMatS/dtool-lookup-server-container-composition
-        ref: ${{ matrix.dtool-lookup-server-container-composition-version }}
-        path: dtool-lookup-server-container-composition
+        repository: livMatS/dserver-container-composition
+        ref: ${{ matrix.dserver-container-composition-version }}
+        path: dserver-container-composition
 
     - name: Git checkout dtool-lookup-api ${{ matrix.dtool-lookup-api-version }}
       uses: actions/checkout@v3
@@ -175,8 +175,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Modify pinned version for ${{ inputs.image }}, provide dtool lookup server ${{ matrix.dtool-lookup-server-version }} and run tests
-      working-directory: dtool-lookup-server-container-composition
+    - name: Modify pinned version for ${{ inputs.image }}, provide dtool lookup server ${{ matrix.dserver-version }} and run tests
+      working-directory: dserver-container-composition
       run: |
         # override composition defaults to use local image
         # use commit-specific github sha tag to identify image built above correctly

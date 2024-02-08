@@ -10,26 +10,26 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
-        dtool-lookup-server-container-composition-version: ['0.11.2']
+        dserver-container-composition-version: ['0.11.2']
 
     steps:
     - name: Git checkout this
       uses: actions/checkout@v3
 
-    - name: Git checkout dtool-lookup-server-container-composition ${{ matrix.dtool-lookup-server-container-composition-version }}
+    - name: Git checkout dserver-container-composition ${{ matrix.dserver-container-composition-version }}
       uses: actions/checkout@v3
       with:
-        repository: livMatS/dtool-lookup-server-container-composition
-        ref: ${{ matrix.dtool-lookup-server-container-composition-version }}
-        path: dtool-lookup-server-container-composition
+        repository: livMatS/dserver-container-composition
+        ref: ${{ matrix.dserver-container-composition-version }}
+        path: dserver-container-composition
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Provide dtool lookup server ${{ matrix.dtool-lookup-server-version }}
-      working-directory: ./dtool-lookup-server-container-composition
+    - name: Provide dtool lookup server ${{ matrix.dserver-version }}
+      working-directory: ./dserver-container-composition
       run: |
         # the following line allows testing locally with act (https://github.com/nektos/act),
         # i.e. by running
@@ -111,4 +111,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Pytest
-      run: pytest --deselect=dtool-lookup-server-container-composition
+      run: pytest --deselect=dserver-container-composition

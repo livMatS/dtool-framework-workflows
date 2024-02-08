@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Git checkout this
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Git checkout dtool-lookup-api ${{ matrix.dtool-lookup-api-version }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: livMatS/dtool-lookup-api
         ref: ${{ matrix.dtool-lookup-api-version }}

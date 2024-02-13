@@ -23,7 +23,7 @@ on:
         required: true
       DOCKERHUB_TOKEN:
         required: true
-     
+
 
 jobs:
   build:

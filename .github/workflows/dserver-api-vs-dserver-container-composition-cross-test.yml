@@ -1,4 +1,4 @@
-name: dtool-lookup-api-test
+name: dserver-api-vs-dserver-container-composition-cross-test
 
 on:
   workflow_call:
@@ -9,13 +9,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
-        dserver-container-composition-version: ['0.11.2']
+        python-version: ['3.8', '3.10']
+        dserver-container-composition-version: ['main']
+        dserver-api-version: ['main']
 
     steps:
-    - name: Git checkout this
-      uses: actions/checkout@v4
-
     - name: Git checkout dserver-container-composition ${{ matrix.dserver-container-composition-version }}
       uses: actions/checkout@v4
       with:
@@ -23,12 +21,19 @@ jobs:
         ref: ${{ matrix.dserver-container-composition-version }}
         path: dserver-container-composition
 
+    - name: Git checkout dserver-api ${{ matrix.dserver-api-version }}
+      uses: actions/checkout@v4
+      with:
+        repository: livMatS/dserver-api
+        ref: ${{ matrix.dserver-api-version }}
+        path: dserver-api
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Provide dtool lookup server ${{ matrix.dserver-version }}
+    - name: Provide dserver ${{ matrix.dserver-version }}
       working-directory: ./dserver-container-composition
       run: |
         # the following line allows testing locally with act (https://github.com/nektos/act),
@@ -69,11 +74,11 @@ jobs:
         echo "docker images"
         docker compose ${DOCKER_COMPOSE_OPTS} images
 
-        echo "dtool lookup server log"
+        echo "dserver log"
         docker compose ${DOCKER_COMPOSE_OPTS} logs dserver
         
-        echo "dtool lookup client log"
-        docker compose ${DOCKER_COMPOSE_OPTS} logs dtool_lookup_client
+        echo "dserver client log"
+        docker compose ${DOCKER_COMPOSE_OPTS} logs dserver_client
 
         echo "s3server log"
         docker compose  ${DOCKER_COMPOSE_OPTS} logs s3server
@@ -88,27 +93,23 @@ jobs:
         docker compose ${DOCKER_COMPOSE_OPTS} exec -T dserver /refresh_index
 
         echo "dtool query '{}'"
-        docker compose ${DOCKER_COMPOSE_OPTS} run dtool_lookup_client query '{}'
+        docker compose ${DOCKER_COMPOSE_OPTS} run dserver_client query '{}'
 
     - name: Install basic testing requirements
+      working-directory: dserver-api
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel setuptools-scm[toml] importlib-metadata
-        pip install flake8 pytest pytest-cov pytest-ordering
+        pip install pytest pytest-cov pytest-ordering
 
-    - name: Install this package
+    - name: Install dserver-api
+      working-directory: dserver-api
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install ".[testing]"
         echo "pip list"
         pip list
 
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Pytest
-      run: pytest --deselect=dserver-container-composition
+    - name: Run dserver-api tests
+      working-directory: dserver-api
+      run: pytest

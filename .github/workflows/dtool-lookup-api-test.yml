@@ -1,4 +1,4 @@
-name: dserver-api-test
+name: dtool-lookup-api-test
 
 on:
   workflow_call:

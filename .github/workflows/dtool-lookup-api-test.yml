@@ -38,6 +38,8 @@ jobs:
         sudo chown runner:docker /var/run/docker.sock
         # see https://github.com/nektos/act/issues/724#issuecomment-855390956
 
+        echo "y" | maintenance/replace_hostname.sh localhost
+        source .env
         source env.testing.rc
 
         echo "printenv"
